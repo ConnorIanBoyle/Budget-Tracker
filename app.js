@@ -1,4 +1,3 @@
-// --- DOM Elements ---
 const balance = document.getElementById('balance');
 const money_plus = document.getElementById('money-plus');
 const money_minus = document.getElementById('money-minus');
@@ -10,17 +9,36 @@ const type = document.getElementById('type');
 const category = document.getElementById('category');
 const categoryContainer = document.getElementById('category-container');
 const ctx = document.getElementById('expenseChart').getContext('2d');
+const monthlyIncomeInput = document.getElementById('monthly-income-input');
+const saveIncomeBtn = document.getElementById('save-income-btn');
 
-// --- Global Variables ---
 let chartInstance = null;
-
-// Fetch data from LocalStorage
 const localStorageTransactions = JSON.parse(localStorage.getItem('transactions'));
 let transactions = localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
+let monthlyIncome = localStorage.getItem('monthlyIncome') !== null ? parseFloat(localStorage.getItem('monthlyIncome')) : 0;
 
-// --- Event Listeners ---
+if (monthlyIncome > 0 && monthlyIncomeInput) {
+    monthlyIncomeInput.value = monthlyIncome;
+}
 
-// Hide category dropdown if 'Income' is selected (simplifying incomes)
+
+if (saveIncomeBtn) {
+    saveIncomeBtn.addEventListener('click', () => {
+        const incomeValue = parseFloat(monthlyIncomeInput.value);
+        
+        if (isNaN(incomeValue) || incomeValue < 0) {
+            alert('Please enter a valid income amount');
+            return;
+        }
+
+        monthlyIncome = incomeValue;
+        localStorage.setItem('monthlyIncome', monthlyIncome);
+        updateValues();
+        
+        alert('Monthly income saved!');
+    });
+}
+
 type.addEventListener('change', (e) => {
     if (e.target.value === 'income') {
         categoryContainer.style.display = 'none';
@@ -29,7 +47,6 @@ type.addEventListener('change', (e) => {
     }
 });
 
-// Add a new transaction
 form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -41,7 +58,7 @@ form.addEventListener('submit', (e) => {
     const transaction = {
         id: generateID(),
         text: text.value,
-        amount: +amount.value, // Convert string to number
+        amount: +amount.value,
         type: type.value,
         category: type.value === 'expense' ? category.value : 'Income'
     };
@@ -53,24 +70,19 @@ form.addEventListener('submit', (e) => {
     updateChart();
     updateLocalStorage();
 
-    // Reset form inputs
     text.value = '';
     amount.value = '';
 });
 
-// --- Core Functions ---
 
-// Generate random ID
 function generateID() {
     return Math.floor(Math.random() * 100000000);
 }
 
-// Add transactions to DOM list
 function addTransactionDOM(transaction) {
     const sign = transaction.type === 'income' ? '+' : '-';
     const item = document.createElement('li');
 
-    // Add class based on type
     item.classList.add(transaction.type === 'income' ? 'plus' : 'minus');
 
     item.innerHTML = `
@@ -81,31 +93,28 @@ function addTransactionDOM(transaction) {
     list.appendChild(item);
 }
 
-// Update the balance, income and expense (USING REDUCE & FILTER)
 function updateValues() {
-    // 1. FILTER: Separate incomes and expenses
     const incomes = transactions.filter(t => t.type === 'income').map(t => t.amount);
     const expenses = transactions.filter(t => t.type === 'expense').map(t => t.amount);
 
-    // 2. REDUCE: Calculate totals
-    const totalIncome = incomes.reduce((acc, item) => (acc += item), 0).toFixed(2);
+    const transactionIncome = incomes.reduce((acc, item) => (acc += item), 0);
     const totalExpense = expenses.reduce((acc, item) => (acc += item), 0).toFixed(2);
     
-    // Calculate total balance
-    const total = (parseFloat(totalIncome) - parseFloat(totalExpense)).toFixed(2);
+    const grandTotalIncome = (transactionIncome + monthlyIncome).toFixed(2);
 
-    // Update UI
+    const total = (parseFloat(grandTotalIncome) - parseFloat(totalExpense)).toFixed(2);
+
     balance.innerText = `$${total}`;
-    money_plus.innerText = `+$${totalIncome}`;
+    money_plus.innerText = `+$${grandTotalIncome}`;
     money_minus.innerText = `-$${totalExpense}`;
 }
 
-// Update Chart.js Visualization
 function updateChart() {
-    // 1. FILTER: We only want to chart expenses
-    const expenseTransactions = transactions.filter(t => t.type === 'expense');
+    const incomes = transactions.filter(t => t.type === 'income').map(t => t.amount);
+    const transactionIncome = incomes.reduce((acc, item) => (acc += item), 0);
+    const grandTotalIncome = transactionIncome + monthlyIncome;
 
-    // 2. REDUCE: Group expenses by category
+    const expenseTransactions = transactions.filter(t => t.type === 'expense');
     const categoryTotals = expenseTransactions.reduce((acc, transaction) => {
         if (!acc[transaction.category]) {
             acc[transaction.category] = 0;
@@ -114,25 +123,35 @@ function updateChart() {
         return acc;
     }, {});
 
-    // Prepare data for Chart.js
+    const totalExpense = Object.values(categoryTotals).reduce((acc, item) => acc + item, 0);
+
+    let remainingBudget = grandTotalIncome - totalExpense;
+    if (remainingBudget < 0) remainingBudget = 0; 
+
     const labels = Object.keys(categoryTotals);
     const data = Object.values(categoryTotals);
+    
+    const backgroundColors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+    ];
 
-    // Destroy existing chart to prevent rendering glitches
+    if (grandTotalIncome > 0) {
+        labels.push('Remaining Budget');
+        data.push(remainingBudget);
+        backgroundColors.push('#2ecc71');
+    }
+
     if (chartInstance) {
         chartInstance.destroy();
     }
 
-    // Render new chart
     chartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: labels.length > 0 ? labels : ['No Expenses Yet'],
+            labels: labels.length > 0 ? labels : ['No Data Yet'],
             datasets: [{
                 data: data.length > 0 ? data : [1],
-                backgroundColor: [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
-                ],
+                backgroundColor: backgroundColors,
                 borderWidth: 1
             }]
         },
@@ -145,21 +164,17 @@ function updateChart() {
     });
 }
 
-// Remove transaction by ID
 window.removeTransaction = function(id) {
-    // FILTER: Keep everything except the one we want to delete
     transactions = transactions.filter(transaction => transaction.id !== id);
 
     updateLocalStorage();
-    init(); // Re-render everything
+    init();
 }
 
-// Update local storage
 function updateLocalStorage() {
     localStorage.setItem('transactions', JSON.stringify(transactions));
 }
 
-// Initialize App
 function init() {
     list.innerHTML = '';
     transactions.forEach(addTransactionDOM);
