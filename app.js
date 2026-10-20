@@ -115,33 +115,41 @@ function updateChart() {
     const transactionIncome = incomes.reduce((acc, item) => (acc += item), 0);
     const grandTotalIncome = transactionIncome + monthlyIncome;
 
-    // 2. Map categories to 50/30/20 groups and assign border colors
-    // Needs (Blue), Wants (Red), Savings (Gold)
+    // 2. Map categories to 50/30/20 groups
     const ruleMapping = {
-        'Rent': { group: 1, border: '#3498db' },                       // Needs
-        'Utilities': { group: 1, border: '#3498db' },                  // Needs
-        'Food': { group: 1, border: '#3498db' },                       // Needs
-        'Transport': { group: 1, border: '#3498db' },                  // Needs
-        'Entertainment': { group: 2, border: '#e74c3c' },              // Wants
-        'Other': { group: 2, border: '#e74c3c' },                      // Wants
-        'Company Tax & Investments': { group: 3, border: '#f1c40f' }   // Savings
+        'Rent': { group: 1, name: 'Needs', border: '#3498db' },
+        'Utilities': { group: 1, name: 'Needs', border: '#3498db' },
+        'Food': { group: 1, name: 'Needs', border: '#3498db' },
+        'Transport': { group: 1, name: 'Needs', border: '#3498db' },
+        'Entertainment': { group: 2, name: 'Wants', border: '#e74c3c' },
+        'Drinks': { group: 2, name: 'Wants', border: '#e74c3c' },
+        'Other': { group: 2, name: 'Wants', border: '#e74c3c' },
+        'Company Tax & Investments': { group: 3, name: 'Savings', border: '#f1c40f' }
     };
 
-    const fillColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#e84393'];
+    const fillColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#e84393', '#8e44ad'];
 
     // 3. Filter and Group expenses by category
     const expenseTransactions = transactions.filter(t => t.type === 'expense');
+    
+    // Track totals for the 50/30/20 rule
+    let ruleTotals = { 1: 0, 2: 0, 3: 0 }; 
+
     const categoryTotals = expenseTransactions.reduce((acc, transaction) => {
         if (!acc[transaction.category]) acc[transaction.category] = 0;
         acc[transaction.category] += transaction.amount;
+        
+        // Add to the specific rule group (Needs, Wants, or Savings)
+        const groupNum = ruleMapping[transaction.category] ? ruleMapping[transaction.category].group : 4;
+        if (ruleTotals[groupNum] !== undefined) {
+            ruleTotals[groupNum] += transaction.amount;
+        }
         return acc;
     }, {});
 
     // 4. Create an array of slices with percentages and grouping metadata
     let chartSlices = Object.keys(categoryTotals).map((category, index) => {
         const amount = categoryTotals[category];
-        
-        // Calculate what percentage of total income this category takes up
         const percentage = grandTotalIncome > 0 ? ((amount / grandTotalIncome) * 100).toFixed(1) : 0;
         
         return {
@@ -153,31 +161,42 @@ function updateChart() {
         };
     });
 
-    // 5. SORT the array by group so the colored outlines visually connect on the chart!
     chartSlices.sort((a, b) => a.group - b.group);
 
-    // Calculate Total Expense & Remaining Budget
     const totalExpense = chartSlices.reduce((acc, slice) => acc + slice.amount, 0);
     let remainingBudget = grandTotalIncome - totalExpense;
     if (remainingBudget < 0) remainingBudget = 0; 
 
-    // Extract sorted data for Chart.js
     const labels = chartSlices.map(slice => slice.label);
     const data = chartSlices.map(slice => slice.amount);
     const borderColors = chartSlices.map(slice => slice.borderColor);
     const backgroundColors = chartSlices.map(slice => slice.backgroundColor);
 
-    // 6. Add "Remaining Budget" slice if there is an income
     if (grandTotalIncome > 0) {
         const remainingPercentage = ((remainingBudget / grandTotalIncome) * 100).toFixed(1);
         labels.push(`Remaining Budget (${remainingPercentage}%)`);
         data.push(remainingBudget);
-        backgroundColors.push('#2ecc71');
-        borderColors.push('#27ae60');
+        backgroundColors.push('#2ecc71'); 
+        borderColors.push('#27ae60');     
+    }
+
+    // 5. Update the 50/30/20 HTML Summary
+    const summaryContainer = document.getElementById('rule-summary');
+    if (summaryContainer) {
+        const needsPct = grandTotalIncome > 0 ? ((ruleTotals[1] / grandTotalIncome) * 100).toFixed(1) : 0;
+        const wantsPct = grandTotalIncome > 0 ? ((ruleTotals[2] / grandTotalIncome) * 100).toFixed(1) : 0;
+        const savingsPct = grandTotalIncome > 0 ? ((ruleTotals[3] / grandTotalIncome) * 100).toFixed(1) : 0;
+
+        summaryContainer.innerHTML = `
+            <div style="color: #3498db">Needs: ${needsPct}% (Goal: 50%)</div>
+            <div style="color: #e74c3c">Wants: ${wantsPct}% (Goal: 30%)</div>
+            <div style="color: #f1c40f">Savings: ${savingsPct}% (Goal: 20%)</div>
+        `;
     }
 
     if (chartInstance) chartInstance.destroy();
 
+    // 6. Render new chart with adjusted layout
     chartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -186,19 +205,29 @@ function updateChart() {
                 data: data.length > 0 ? data : [1],
                 backgroundColor: backgroundColors.length > 0 ? backgroundColors : ['#ccc'],
                 borderColor: borderColors.length > 0 ? borderColors : ['#fff'],
-                borderWidth: 3,
+                borderWidth: 3, 
                 hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
+            aspectRatio: 1.2,
+            layout: {
+                padding: { bottom: 10 }
+            },
             plugins: {
-                legend: { position: 'right' },
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: { size: 13, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", weight: '500' },
+                        color: '#2c3e50'
+                    }
+                },
                 tooltip: {
+                    bodyFont: { size: 15 },
                     callbacks: {
-                        label: function(context) {
-                            return ` $${context.raw.toFixed(2)}`;
-                        }
+                        label: function(context) { return ` $${context.raw.toFixed(2)}`; }
                     }
                 }
             }
