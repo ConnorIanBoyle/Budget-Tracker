@@ -132,7 +132,7 @@ function updateChart() {
     const data = Object.values(categoryTotals);
     
     const backgroundColors = [
-        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#e84393'
     ];
 
     if (grandTotalIncome > 0) {
