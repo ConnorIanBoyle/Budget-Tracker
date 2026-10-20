@@ -27,7 +27,7 @@ A lightweight, front-end web application that helps users track their income and
 
 1. Clone this repository to your local machine.
 2. Navigate to the project folder.
-3. Open `index.html` in any modern web browser. (No build tools, npm, or servers required!)
+3. Open `index.html` in any modern web browser.
 
 ## Project Structure
 
