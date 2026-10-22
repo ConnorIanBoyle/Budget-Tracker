@@ -79,14 +79,18 @@ function generateID() {
     return Math.floor(Math.random() * 100000000);
 }
 
+// Add transactions to DOM list
 function addTransactionDOM(transaction) {
     const sign = transaction.type === 'income' ? '+' : '-';
     const item = document.createElement('li');
 
+    // Add class based on type
     item.classList.add(transaction.type === 'income' ? 'plus' : 'minus');
 
     item.innerHTML = `
-        ${transaction.text} <span>${sign}$${Math.abs(transaction.amount).toFixed(2)}</span>
+        <span class="history-desc">${transaction.text}</span>
+        <span class="history-cat">${transaction.category}</span>
+        <span class="history-amt">${sign}$${Math.abs(transaction.amount).toFixed(2)}</span>
         <button class="delete-btn" onclick="removeTransaction(${transaction.id})">x</button>
     `;
 

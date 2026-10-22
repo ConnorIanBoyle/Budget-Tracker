@@ -116,7 +116,6 @@ input:focus, select:focus {
     border-color: var(--btn-bg);
 }
 
-/* Fixes the white text visibility on dropdowns in some browsers */
 option {
     background-color: var(--container-bg); 
     color: var(--primary-color);
@@ -152,9 +151,10 @@ option {
     background-color: var(--bg-color);
     color: var(--primary-color);
     border: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 90px 30px;
+    align-items: center;
+    gap: 10px;
     padding: 15px;
     margin-bottom: 10px;
     border-right: 5px solid;
@@ -164,19 +164,48 @@ option {
 .list li.plus { border-right-color: var(--income-color); }
 .list li.minus { border-right-color: var(--expense-color); }
 
+/* Column Styles */
+.history-desc {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-cat {
+    font-size: 12px;
+    color: var(--secondary-color);
+    background: var(--container-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.history-amt {
+    font-weight: bold;
+    text-align: right;
+    font-family: monospace; 
+    font-size: 15px;
+}
+
 .delete-btn {
     cursor: pointer;
     background-color: var(--expense-color);
     border: 0;
     color: #fff;
-    font-size: 12px;
-    padding: 5px 10px;
+    font-size: 14px;
+    width: 30px;
+    height: 30px; 
     border-radius: 4px;
-    margin-left: 10px;
+    margin: 0; 
+    padding: 0; 
     font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Overriding old HTML inline styles for Dark Mode */
 .income-setup, #rule-summary {
     border-color: var(--border-color) !important;
 }
