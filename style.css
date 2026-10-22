@@ -1,9 +1,14 @@
 :root {
-    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    --primary-color: #2c3e50;
-    --bg-color: #f4f7f6;
-    --income-color: #2ecc71;
-    --expense-color: #e74c3c;
+    --bg-color: #0f172a;        /* Deep slate background */
+    --container-bg: #1e293b;    /* Card background */
+    --primary-color: #f8fafc;   /* Crisp white text */
+    --secondary-color: #94a3b8; /* Muted gray text */
+    --border-color: #334155;    /* Subtle dark borders */
+    --income-color: #10b981;    /* Vibrant emerald */
+    --expense-color: #f43f5e;   /* Modern rose/red */
+    --btn-bg: #6366f1;          /* Sleek indigo */
+    --btn-hover: #4f46e5;       
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -22,12 +27,13 @@ body {
 }
 
 .container {
-    background: #fff;
+    background: var(--container-bg);
     width: 100%;
     max-width: 800px;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: var(--box-shadow);
     padding: 30px;
+    border: 1px solid var(--border-color);
 }
 
 header {
@@ -38,10 +44,10 @@ header {
 .summary {
     display: flex;
     justify-content: space-between;
-    background: #fff;
+    background: var(--container-bg);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
     margin-top: 15px;
 }
 
@@ -51,12 +57,13 @@ header {
 }
 
 .summary > div:first-child {
-    border-right: 1px solid #dedede;
+    border-right: 1px solid var(--border-color);
 }
 
 .money {
     font-size: 20px;
     letter-spacing: 1px;
+    font-weight: bold;
 }
 
 .money.plus { color: var(--income-color); }
@@ -76,9 +83,10 @@ header {
 }
 
 h3 {
-    border-bottom: 1px solid #bbb;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 10px;
     margin-bottom: 15px;
+    color: var(--primary-color);
 }
 
 .form-control {
@@ -88,33 +96,52 @@ h3 {
 label {
     display: inline-block;
     margin-bottom: 5px;
-    font-weight: bold;
+    font-weight: 600;
+    color: var(--secondary-color);
 }
 
 input, select {
     width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
     padding: 10px;
     font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: var(--btn-bg);
+}
+
+/* Fixes the white text visibility on dropdowns in some browsers */
+option {
+    background-color: var(--container-bg); 
+    color: var(--primary-color);
 }
 
 .btn {
     cursor: pointer;
-    background-color: #3498db;
-    box-shadow: var(--box-shadow);
+    background-color: var(--btn-bg);
     color: #fff;
     border: 0;
     display: block;
     font-size: 16px;
+    font-weight: bold;
     padding: 12px;
     width: 100%;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
+    border-radius: 6px;
+    transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
 .btn:hover {
-    background-color: #2980b9;
+    background-color: var(--btn-hover);
+}
+
+.btn:active {
+    transform: scale(0.98);
 }
 
 .list {
@@ -122,20 +149,20 @@ input, select {
 }
 
 .list li {
-    background-color: #fff;
-    box-shadow: var(--box-shadow);
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     position: relative;
     padding: 15px;
     margin-bottom: 10px;
     border-right: 5px solid;
-    border-radius: 4px;
+    border-radius: 6px;
 }
 
-.list li.plus { border-color: var(--income-color); }
-.list li.minus { border-color: var(--expense-color); }
+.list li.plus { border-right-color: var(--income-color); }
+.list li.minus { border-right-color: var(--expense-color); }
 
 .delete-btn {
     cursor: pointer;
@@ -144,6 +171,12 @@ input, select {
     color: #fff;
     font-size: 12px;
     padding: 5px 10px;
-    border-radius: 3px;
+    border-radius: 4px;
     margin-left: 10px;
+    font-weight: bold;
+}
+
+/* Overriding old HTML inline styles for Dark Mode */
+.income-setup, #rule-summary {
+    border-color: var(--border-color) !important;
 }
